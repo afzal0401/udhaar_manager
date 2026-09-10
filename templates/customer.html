@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Customer.Name}} - Ledger</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <main class="container">
+        <a href="/dashboard">&larr; Back</a>
+        <h1>{{.Customer.Name}}</h1>
+        <p>{{.Customer.Phone}}</p>
+        <div class="summary-card">
+            <span>Outstanding</span>
+            <strong>₹{{printf "%.2f" .Customer.Outstanding}}</strong>
+        </div>
+
+        <table class="ledger-table">
+            <thead>
+                <tr><th>Date</th><th>Type</th><th>Amount</th><th>Note</th></tr>
+            </thead>
+            <tbody>
+                {{range .Entries}}
+                <tr>
+                    <td>{{.EntryDate.Format "02 Jan"}}</td>
+                    <td>{{.EntryType}}</td>
+                    <td>₹{{printf "%.2f" .Amount}}</td>
+                    <td>{{.Note}}</td>
+                </tr>
+                {{else}}
+                <tr><td colspan="4">No entries yet.</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+
+        <form action="/customers/{{.Customer.ID}}/entries" method="POST" class="form-card">
+            <label for="entry_type">Type</label>
+            <select id="entry_type" name="entry_type">
+                <option value="credit">Udhaar</option>
+                <option value="payment">customer paid</option>
+            </select>
+
+            <label for="amount">Amount</label>
+            <input type="number" step="0.01" id="amount" name="amount" required>
+
+            <label for="entry_date">Date</label>
+            <input type="date" id="entry_date" name="entry_date">
+
+            <label for="note">Note (optional)</label>
+            <input type="text" id="note" name="note" placeholder="e.g. rice + oil">
+
+            <button type="submit">Add Entry</button>
+        </form>
+    </main>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udhaar Manager - Login</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="auth-card">
+        <h1>Udhaar Manager</h1>
+        <p>Enter your shop name and phone number to get started.</p>
+        <form action="/login/otp" method="POST">
+            <label for="shop_name">Shop name</label>
+            <input type="text" id="shop_name" name="shop_name" placeholder="My Shop" required>
+            <label for="phone">Phone number</label>
+            <input type="tel" id="phone" name="phone" placeholder="+919812345678" required>
+            <button type="submit">Send OTP</button>
+        </form>
+    </div>
+</body>
+</html>

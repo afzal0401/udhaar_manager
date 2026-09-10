@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udhaar Manager - Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="topbar">
+        <h1>Udhaar Manager</h1>
+        <form action="/logout" method="POST"><button type="submit" class="link-btn">Logout</button></form>
+    </header>
+
+    <main class="container">
+        <div class="summary-card">
+            <span>Total outstanding</span>
+            <strong>₹{{printf "%.2f" .TotalOutstanding}}</strong>
+        </div>
+
+        <a href="/customers/new" class="btn">+ Add Customer</a>
+
+        <table class="ledger-table">
+            <thead>
+                <tr><th>Customer</th><th>Phone</th><th>Outstanding</th></tr>
+            </thead>
+            <tbody>
+                {{range .Customers}}
+                <tr onclick="window.location='/customers/{{.ID}}'">
+                    <td>{{.Name}}</td>
+                    <td>{{.Phone}}</td>
+                    <td>₹{{printf "%.2f" .Outstanding}}</td>
+                </tr>
+                {{else}}
+                <tr><td colspan="3">No customers yet. Add your first one above.</td></tr>
+                {{end}}
+            </tbody>
+        </table>
+    </main>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

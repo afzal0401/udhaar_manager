@@ -1,0 +1,144 @@
+* { box-sizing: border-box; }
+
+:root {
+    --green: #15803d;
+    --green-dark: #166534;
+    --green-soft: #f0fdf4;
+    --ink: #17211b;
+    --muted: #647067;
+    --line: #dfe7e1;
+    --surface: #ffffff;
+    --page: #f3f7f4;
+    --shadow: 0 10px 30px rgba(31, 56, 39, 0.08);
+}
+
+body {
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    line-height: 1.5;
+}
+
+.container { max-width: 900px; margin: 0 auto; padding: 32px 24px 48px; }
+.container > h1 { margin: 0 0 6px; font-size: clamp(1.7rem, 4vw, 2.2rem); }
+.container > p { margin: 0 0 20px; color: var(--muted); }
+
+.auth-card, .form-card {
+    width: min(100%, 440px);
+    margin: 48px auto;
+    background: var(--surface);
+    padding: 28px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+.auth-card h1 { margin: 0; font-size: 1.8rem; }
+.auth-card p { margin: 0 0 12px; color: var(--muted); }
+label { font-size: 0.9rem; font-weight: 700; color: #344238; }
+input, select, button {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 16px;
+    font-family: inherit;
+    border-radius: 7px;
+    border: 1px solid #cbd8ce;
+    background: #fff;
+}
+input:focus, select:focus {
+    outline: 3px solid rgba(21, 128, 61, 0.15);
+    border-color: var(--green);
+}
+button, .btn {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 16px;
+    margin: 14px 0 4px;
+    border-radius: 7px;
+    font-weight: 700;
+}
+button:hover, .btn:hover { background: var(--green-dark); }
+.container > .btn { width: fit-content; margin: 0 0 20px; }
+.form-card { margin: 24px 0 0; }
+.form-card button { align-self: flex-start; width: auto; min-width: 150px; }
+a { color: var(--green-dark); font-weight: 700; }
+.container > a:first-child { display: inline-block; margin-bottom: 18px; }
+.container > .form-card + a { display: inline-block; margin-top: 18px; }
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 14px max(24px, calc((100vw - 900px) / 2));
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+}
+.topbar h1 { margin: 0; font-size: 1.35rem; }
+.topbar form { margin: 0; }
+.topbar .link-btn {
+    width: auto;
+    min-height: auto;
+    margin: 0;
+    padding: 6px 0;
+    color: var(--green-dark);
+    background: transparent;
+    font-weight: 700;
+}
+.summary-card {
+    background: var(--surface);
+    padding: 18px 20px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin: 0 0 24px;
+    box-shadow: var(--shadow);
+}
+.summary-card span { color: var(--muted); font-weight: 700; }
+.summary-card strong { font-size: 1.45rem; color: var(--green); white-space: nowrap; }
+.ledger-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+.ledger-table th, .ledger-table td {
+    text-align: left;
+    padding: 14px 16px;
+    border-bottom: 1px solid #edf1ee;
+    vertical-align: middle;
+}
+.ledger-table th { background: var(--green-soft); color: #38533f; font-size: 0.85rem; }
+.ledger-table tr:last-child td { border-bottom: 0; }
+.ledger-table tr[onclick] { cursor: pointer; }
+.ledger-table tr[onclick]:hover { background: var(--green-soft); }
+
+@media (max-width: 600px) {
+    .container { padding: 24px 16px 36px; }
+    .auth-card, .form-card { margin: 24px auto; padding: 22px 18px; }
+    .topbar { padding: 13px 16px; }
+    .topbar h1 { font-size: 1.15rem; }
+    .summary-card { align-items: flex-start; flex-direction: column; gap: 4px; }
+    .container > .btn { width: 100%; }
+    .ledger-table { display: block; overflow-x: auto; white-space: nowrap; }
+    .ledger-table th, .ledger-table td { padding: 12px; }
+}

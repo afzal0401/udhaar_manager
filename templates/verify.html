@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udhaar Manager - Verify OTP</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="auth-card">
+        <h1>Verify OTP</h1>
+        <p>Check your phone (or the server console log during testing) for the code.</p>
+        <form action="/login/verify" method="POST">
+            <input type="hidden" name="phone" value="{{.Phone}}">
+            <label for="otp">6-digit OTP</label>
+            <input type="text" id="otp" name="otp" maxlength="6" required>
+            <button type="submit">Verify &amp; Login</button>
+        </form>
+    </div>
+</body>
+</html>
