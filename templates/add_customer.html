@@ -8,7 +8,11 @@
 </head>
 <body>
     <main class="container">
-        <h1>Add Customer</h1>
+        <div class="page-heading">
+            <span class="eyebrow">NEW RECORD</span>
+            <h1>Add customer</h1>
+            <p>Start a clear, respectful ledger for every customer bothways.</p>
+        </div>
         <form action="/customers" method="POST" class="form-card">
             <label for="name">Name</label>
             <input type="text" id="name" name="name" required>
@@ -25,7 +29,7 @@
 
             <button type="submit">Save Customer</button>
         </form>
-        <a href="/dashboard">Back to dashboard</a>
+        <a class="back-link" href="/dashboard">&larr; Back to dashboard</a>
     </main>
 </body>
 </html>

@@ -9,8 +9,8 @@
 <body>
     <header class="topbar">
         <div>
-            <h1>{{.ShopName}}</h1>
-            <span class="topbar-subtitle">Udhaar Manager</span>
+            <div class="topbar-brand"><span class="topbar-mark">UM</span><span>Udhaar Manager</span></div>
+            <span class="topbar-subtitle">{{.ShopName}}</span>
         </div>
         <nav class="topbar-actions">
             <a href="/settings" class="link-btn settings-link" aria-label="Owner settings" title="Owner settings">
@@ -22,12 +22,33 @@
     </header>
 
     <main class="container">
-        <div class="summary-card">
-            <span>Total outstanding</span>
-            <strong>₹{{printf "%.2f" .TotalOutstanding}}</strong>
+        <section class="dashboard-hero">
+            <div>
+                <span class="eyebrow">YOUR CREDIT DESK</span>
+                <h1>Good business starts with a clear ledger.</h1>
+                <p>Keep every customer promise, payment, and balance in one calm place.</p>
+            </div>
+            <div class="hero-accent" aria-hidden="true">₹</div>
+        </section>
+
+        <div class="dashboard-stats">
+            <div class="summary-card">
+                <span>Total outstanding</span>
+                <strong>₹{{printf "%.2f" .TotalOutstanding}}</strong>
+            </div>
+            <div class="summary-card summary-card-secondary">
+                <span>Ledger status</span>
+                <strong class="status-positive">Active</strong>
+            </div>
         </div>
 
-        <a href="/customers/new" class="btn">+ Add Customer</a>
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">CUSTOMER LEDGER</span>
+                <h2>Your customers</h2>
+            </div>
+            <a href="/customers/new" class="btn">+ Add Customer</a>
+        </div>
 
         <table class="ledger-table">
             <thead>

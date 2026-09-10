@@ -8,9 +8,12 @@
 </head>
 <body>
     <main class="container">
-        <a href="/dashboard">&larr; Back</a>
-        <h1>{{.Customer.Name}}</h1>
-        <p>{{.Customer.Phone}}</p>
+        <a class="back-link" href="/dashboard">&larr; Back to customers</a>
+        <div class="page-heading customer-heading">
+            <span class="eyebrow">CUSTOMER LEDGER</span>
+            <h1>{{.Customer.Name}}</h1>
+            <p>{{.Customer.Phone}}</p>
+        </div>
         <div class="summary-card">
             <span>Outstanding</span>
             <strong>₹{{printf "%.2f" .Customer.Outstanding}}</strong>
@@ -34,6 +37,7 @@
             </tbody>
         </table>
 
+        <div class="section-heading compact-heading"><div><span class="eyebrow">NEW TRANSACTION</span><h2>Add to ledger</h2></div></div>
         <form action="/customers/{{.Customer.ID}}/entries" method="POST" class="form-card">
             <label for="entry_type">Type</label>
             <select id="entry_type" name="entry_type">
