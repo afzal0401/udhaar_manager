@@ -28,6 +28,7 @@ func main() {
 	custH := &handlers.CustomerHandler{DB: conn, Tmpl: tmpl}
 	ledgerH := &handlers.LedgerHandler{DB: conn, Notify: sender}
 	dashH := &handlers.DashboardHandler{DB: conn, Tmpl: tmpl}
+	settingsH := &handlers.SettingsHandler{DB: conn, Tmpl: tmpl}
 
 	mux := http.NewServeMux()
 
@@ -41,12 +42,15 @@ func main() {
 	// Protected routes
 	protected := http.NewServeMux()
 	protected.HandleFunc("GET /dashboard", dashH.Dashboard)
+	protected.HandleFunc("GET /settings", settingsH.SettingsPage)
+	protected.HandleFunc("POST /settings", settingsH.UpdateSettings)
 	protected.HandleFunc("GET /customers/new", custH.NewCustomerPage)
 	protected.HandleFunc("POST /customers", custH.CreateCustomer)
 	protected.HandleFunc("GET /customers/{id}", custH.CustomerDetail)
 	protected.HandleFunc("POST /customers/{id}/entries", ledgerH.AddEntry)
 
 	mux.Handle("/dashboard", middleware.RequireAuth(conn)(protected))
+	mux.Handle("/settings", middleware.RequireAuth(conn)(protected))
 	mux.Handle("POST /customers", middleware.RequireAuth(conn)(protected))
 	mux.Handle("/customers/", middleware.RequireAuth(conn)(protected))
 

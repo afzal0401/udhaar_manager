@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Settings - Udhaar Manager</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <main class="container">
+        <a href="/dashboard">&larr; Back</a>
+        <h1>Owner settings</h1>
+        <p>Update the shop details shown in your account.</p>
+
+        <form action="/settings" method="POST" class="form-card">
+            <label for="shop_name">Shop name</label>
+            <input type="text" id="shop_name" name="shop_name" value="{{.Name}}" maxlength="150" required>
+
+            <label for="owner_phone">Mobile number</label>
+            <input type="tel" id="owner_phone" value="{{.OwnerPhone}}" readonly>
+
+            <button type="submit">Save changes</button>
+        </form>
+    </main>
+</body>
+</html>

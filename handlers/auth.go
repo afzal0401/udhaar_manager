@@ -23,9 +23,8 @@ func (h *AuthHandler) LoginPage(w http.ResponseWriter, r *http.Request) {
 // RequestOTP creates the shop row if it doesn't exist yet, generates an OTP, and "sends" it via notify.
 func (h *AuthHandler) RequestOTP(w http.ResponseWriter, r *http.Request) {
 	phone := r.FormValue("phone")
-	shopName := r.FormValue("shop_name")
-	if phone == "" || shopName == "" {
-		http.Error(w, "shop name and phone are required", http.StatusBadRequest)
+	if phone == "" {
+		http.Error(w, "phone is required", http.StatusBadRequest)
 		return
 	}
 
@@ -34,10 +33,10 @@ func (h *AuthHandler) RequestOTP(w http.ResponseWriter, r *http.Request) {
 	expiresAt := time.Now().Add(5 * time.Minute)
 
 	_, err := h.DB.Exec(`
-		INSERT INTO shops (name, owner_phone, otp_hash, otp_expires_at)
-		VALUES (?, ?, ?, ?)
-		ON DUPLICATE KEY UPDATE name = VALUES(name), otp_hash = VALUES(otp_hash), otp_expires_at = VALUES(otp_expires_at)`,
-		shopName, phone, otpHash, expiresAt,
+		INSERT INTO shops (owner_phone, otp_hash, otp_expires_at)
+		VALUES (?, ?, ?)
+		ON DUPLICATE KEY UPDATE otp_hash = VALUES(otp_hash), otp_expires_at = VALUES(otp_expires_at)`,
+		phone, otpHash, expiresAt,
 	)
 	if err != nil {
 		http.Error(w, "failed to create otp", http.StatusInternalServerError)
@@ -60,11 +59,12 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	otp := r.FormValue("otp")
 
 	var shopID uint64
+	var shopName string
 	var otpHash string
 	var expiresAt time.Time
 	err := h.DB.QueryRow(
-		"SELECT id, otp_hash, otp_expires_at FROM shops WHERE owner_phone = ?", phone,
-	).Scan(&shopID, &otpHash, &expiresAt)
+		"SELECT id, COALESCE(name, ''), otp_hash, otp_expires_at FROM shops WHERE owner_phone = ?", phone,
+	).Scan(&shopID, &shopName, &otpHash, &expiresAt)
 	if err != nil {
 		http.Error(w, "shop not found", http.StatusBadRequest)
 		return
@@ -98,6 +98,10 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
+	if shopName == "" || shopName == "My Shop" {
+		http.Redirect(w, r, "/settings", http.StatusSeeOther)
+		return
+	}
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 

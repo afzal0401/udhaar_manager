@@ -8,11 +8,23 @@
 </head>
 <body>
     <div class="auth-card">
-        <h1>Udhaar Manager</h1>
-        <p>Enter your shop name and phone number to get started.</p>
+        <div class="brand-mark" role="img" aria-label="Udhaar Manager logo">
+            <span class="brand-glow"></span>
+            <span class="brand-page brand-page-back"></span>
+            <span class="brand-page brand-page-front"></span>
+            <span class="brand-monogram">UM</span>
+            <span class="brand-rupee">&#8377;</span>
+            <span class="brand-line brand-line-long"></span>
+            <span class="brand-line brand-line-short"></span>
+            <span class="brand-check" aria-hidden="true">&#10003;</span>
+        </div>
+        <div class="brand-wordmark">
+            <h1>Udhaar Manager</h1>
+            <span>SMART CREDIT LEDGER</span>
+        </div>
+        <p class="brand-quote">Keep every credit clear, every relationship strong.</p>
+        <p>Enter your mobile number to get started.</p>
         <form action="/login/otp" method="POST">
-            <label for="shop_name">Shop name</label>
-            <input type="text" id="shop_name" name="shop_name" placeholder="My Shop" required>
             <label for="phone">Phone number</label>
             <input type="tel" id="phone" name="phone" placeholder="+919812345678" required>
             <button type="submit">Send OTP</button>

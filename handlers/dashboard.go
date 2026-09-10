@@ -17,6 +17,12 @@ type DashboardHandler struct {
 func (h *DashboardHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	shopID := middleware.ShopIDFromContext(r)
 
+	var shopName string
+	if err := h.DB.QueryRow("SELECT COALESCE(name, '') FROM shops WHERE id = ?", shopID).Scan(&shopName); err != nil {
+		http.Error(w, "failed to load shop", http.StatusInternalServerError)
+		return
+	}
+
 	rows, err := h.DB.Query(`
 		SELECT c.id, c.name, c.phone, c.opening_balance,
 		       c.opening_balance + COALESCE(SUM(CASE WHEN l.entry_type='credit' THEN l.amount ELSE -l.amount END), 0) AS outstanding
@@ -43,6 +49,7 @@ func (h *DashboardHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.Tmpl.ExecuteTemplate(w, "dashboard.html", map[string]any{
+		"ShopName":         shopName,
 		"Customers":        customers,
 		"TotalOutstanding": totalOutstanding,
 	})

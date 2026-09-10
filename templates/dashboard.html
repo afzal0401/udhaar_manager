@@ -8,8 +8,17 @@
 </head>
 <body>
     <header class="topbar">
-        <h1>Udhaar Manager</h1>
-        <form action="/logout" method="POST"><button type="submit" class="link-btn">Logout</button></form>
+        <div>
+            <h1>{{.ShopName}}</h1>
+            <span class="topbar-subtitle">Udhaar Manager</span>
+        </div>
+        <nav class="topbar-actions">
+            <a href="/settings" class="link-btn settings-link" aria-label="Owner settings" title="Owner settings">
+                <span class="settings-icon" aria-hidden="true">&#9881;</span>
+                <!-- <span>Owner settings</span> -->
+            </a>
+            <form action="/logout" method="POST"><button type="submit" class="link-btn">Logout</button></form>
+        </nav>
     </header>
 
     <main class="container">
