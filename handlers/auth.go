@@ -43,7 +43,10 @@ func (h *AuthHandler) RequestOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Notify.Send(phone, "sms", "Your Udhaar Manager OTP is: "+otp)
+	if err := h.Notify.SendOTP(phone, otp); err != nil {
+		http.Error(w, "failed to send otp", http.StatusBadGateway)
+		return
+	}
 
 	http.Redirect(w, r, "/login/verify?phone="+phone, http.StatusSeeOther)
 }

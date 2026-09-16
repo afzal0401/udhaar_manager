@@ -10,8 +10,11 @@ type Config struct {
 	DBName     string
 	Port       string
 
-	MSG91AuthKey  string
-	GupshupAPIKey string
+	WhatsAppAccessToken     string
+	WhatsAppPhoneNumberID   string
+	WhatsAppOTPTemplate     string
+	WhatsAppMessageTemplate string
+	WhatsAppTemplateLang    string
 }
 
 func getEnv(key, fallback string) string {
@@ -30,8 +33,10 @@ func Load() *Config {
 		DBName:     getEnv("DB_NAME", "udhaar_manager"),
 		Port:       getEnv("PORT", "8080"),
 
-		// Leave empty until you sign up with a provider; notify package falls back to console logging.
-		MSG91AuthKey:  getEnv("MSG91_AUTH_KEY", ""),
-		GupshupAPIKey: getEnv("GUPSHUP_API_KEY", ""),
+		WhatsAppAccessToken:     getEnv("WHATSAPP_ACCESS_TOKEN", ""),
+		WhatsAppPhoneNumberID:   getEnv("WHATSAPP_PHONE_NUMBER_ID", ""),
+		WhatsAppOTPTemplate:     getEnv("WHATSAPP_OTP_TEMPLATE", ""),
+		WhatsAppMessageTemplate: getEnv("WHATSAPP_MESSAGE_TEMPLATE", ""),
+		WhatsAppTemplateLang:    getEnv("WHATSAPP_TEMPLATE_LANGUAGE", "en_US"),
 	}
 }

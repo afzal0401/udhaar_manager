@@ -1,10 +1,14 @@
 package notify
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
-	"net/url"
+	"strings"
+	"time"
 
 	"udhaar-manager/config"
 )
@@ -24,36 +28,77 @@ func (s *Sender) Send(phone, channel, message string) error {
 		return nil
 	}
 
-	if channel == "whatsapp" && s.cfg.GupshupAPIKey != "" {
-		return s.sendWhatsApp(phone, message)
-	}
-	if s.cfg.MSG91AuthKey != "" {
-		return s.sendSMS(phone, message)
+	if channel == "whatsapp" && s.whatsAppConfigured() && s.cfg.WhatsAppMessageTemplate != "" {
+		return s.sendWhatsAppTemplate(phone, s.cfg.WhatsAppMessageTemplate, message)
 	}
 
-	// No provider configured yet — log so you can verify the flow works end-to-end before paying for a provider.
+	// No provider configured yet: log so local development can continue.
 	log.Printf("[notify:console] to=%s channel=%s message=%q", phone, channel, message)
 	return nil
 }
 
-func (s *Sender) sendWhatsApp(phone, message string) error {
-	// TODO: replace with real Gupshup/AiSensy/Interakt template API call once approved.
-	form := url.Values{}
-	form.Set("phone", phone)
-	form.Set("message", message)
-	log.Printf("[notify:whatsapp:stub] to=%s message=%q", phone, message)
-	_ = form
+// SendOTP delivers an OTP through WhatsApp when configured, otherwise logs it for local development.
+func (s *Sender) SendOTP(phone, otp string) error {
+	if phone == "" {
+		return nil
+	}
+	if s.whatsAppConfigured() && s.cfg.WhatsAppOTPTemplate != "" {
+		return s.sendWhatsAppTemplate(phone, s.cfg.WhatsAppOTPTemplate, otp)
+	}
+	log.Printf("[notify:console] to=%s channel=whatsapp message=\"Your Udhaar Manager OTP is: %s\"", phone, otp)
 	return nil
 }
 
-func (s *Sender) sendSMS(phone, message string) error {
-	// TODO: replace with real MSG91/Twilio SMS API call.
-	req, err := http.NewRequest(http.MethodGet, "https://api.msg91.com/api/v5/otp", nil)
+func (s *Sender) whatsAppConfigured() bool {
+	return s.cfg.WhatsAppAccessToken != "" &&
+		s.cfg.WhatsAppPhoneNumberID != ""
+}
+
+func (s *Sender) sendWhatsAppTemplate(phone, templateName, bodyText string) error {
+	if templateName == "" {
+		return fmt.Errorf("WhatsApp template is not configured")
+	}
+
+	payload, err := json.Marshal(map[string]any{
+		"messaging_product": "whatsapp",
+		"to":                strings.TrimPrefix(phone, "+"),
+		"type":              "template",
+		"template": map[string]any{
+			"name": templateName,
+			"language": map[string]string{
+				"code": s.cfg.WhatsAppTemplateLang,
+			},
+			"components": []map[string]any{
+				{
+					"type": "body",
+					"parameters": []map[string]string{
+						{"type": "text", "text": bodyText},
+					},
+				},
+			},
+		},
+	})
 	if err != nil {
 		return err
 	}
-	_ = req
-	log.Printf("[notify:sms:stub] to=%s message=%q", phone, message)
+
+	endpoint := "https://graph.facebook.com/v21.0/" + s.cfg.WhatsAppPhoneNumberID + "/messages"
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("authorization", "Bearer "+s.cfg.WhatsAppAccessToken)
+	req.Header.Set("content-type", "application/json")
+
+	resp, err := (&http.Client{Timeout: 10 * time.Second}).Do(req)
+	if err != nil {
+		return fmt.Errorf("send WhatsApp request: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		return fmt.Errorf("WhatsApp rejected message: status %s: %s", resp.Status, body)
+	}
 	return nil
 }
 
