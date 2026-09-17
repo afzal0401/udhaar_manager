@@ -20,6 +20,16 @@
             <label for="shop_name">Shop name</label>
             <input type="text" id="shop_name" name="shop_name" value="{{.Name}}" maxlength="150" required>
 
+            <label for="owner_name">Owner name</label>
+            <input type="text" id="owner_name" name="owner_name" value="{{.OwnerName}}" maxlength="100" placeholder="Enter your name">
+
+            <label for="plan">Plan</label>
+            <select id="plan" name="plan">
+                <option value="trial" {{if eq .Plan "trial"}}selected{{end}}>Trial</option>
+                <option value="basic" {{if eq .Plan "basic"}}selected{{end}}>Basic</option>
+                <option value="pro" {{if eq .Plan "pro"}}selected{{end}}>Pro</option>
+            </select>
+
             <label for="owner_phone">Mobile number</label>
             <input type="tel" id="owner_phone" value="{{.OwnerPhone}}" readonly>
 

@@ -18,10 +18,13 @@ func (h *DashboardHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	shopID := middleware.ShopIDFromContext(r)
 
 	var shopName string
-	if err := h.DB.QueryRow("SELECT COALESCE(name, '') FROM shops WHERE id = ?", shopID).Scan(&shopName); err != nil {
+	var ownerName string
+	var plan string
+	if err := h.DB.QueryRow("SELECT COALESCE(name, ''), COALESCE(owner_name, ''), COALESCE(plan, 'trial') FROM shops WHERE id = ?", shopID).Scan(&shopName, &ownerName, &plan); err != nil {
 		http.Error(w, "failed to load shop", http.StatusInternalServerError)
 		return
 	}
+	shopName, ownerName, plan = normalizeShopProfile(shopName, ownerName, plan)
 
 	rows, err := h.DB.Query(`
 		SELECT c.id, c.name, c.phone, c.opening_balance,
@@ -50,6 +53,8 @@ func (h *DashboardHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 
 	h.Tmpl.ExecuteTemplate(w, "dashboard.html", map[string]any{
 		"ShopName":         shopName,
+		"OwnerName":        ownerName,
+		"Plan":             plan,
 		"Customers":        customers,
 		"TotalOutstanding": totalOutstanding,
 	})

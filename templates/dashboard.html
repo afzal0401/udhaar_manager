@@ -25,8 +25,8 @@
         <section class="dashboard-hero">
             <div>
                 <span class="eyebrow">YOUR CREDIT DESK</span>
-                <h1>Good business starts with a clear ledger.</h1>
-                <p>Keep every customer promise, payment, and balance in one calm place.</p>
+                <h1>{{.ShopName}}</h1>
+                <p>{{if .OwnerName}}Owner: {{.OwnerName}}{{else}}Welcome back!{{end}} · Plan: {{.Plan}}</p>
             </div>
             <div class="hero-accent" aria-hidden="true">₹</div>
         </section>

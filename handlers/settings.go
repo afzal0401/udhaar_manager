@@ -15,6 +15,24 @@ type SettingsHandler struct {
 	Tmpl *template.Template
 }
 
+func normalizeShopProfile(shopName, ownerName, plan string) (string, string, string) {
+	trimmedShop := strings.TrimSpace(shopName)
+	if trimmedShop == "" {
+		trimmedShop = "My Shop"
+	}
+
+	trimmedOwner := strings.TrimSpace(ownerName)
+	trimmedPlan := strings.ToLower(strings.TrimSpace(plan))
+	if trimmedPlan == "" || trimmedPlan == "unknown" {
+		trimmedPlan = "trial"
+	}
+	if trimmedPlan != "trial" && trimmedPlan != "basic" && trimmedPlan != "pro" {
+		trimmedPlan = "trial"
+	}
+
+	return trimmedShop, trimmedOwner, trimmedPlan
+}
+
 func (h *SettingsHandler) SettingsPage(w http.ResponseWriter, r *http.Request) {
 	shop, err := h.shopFromRequest(r)
 	if err != nil {
@@ -26,15 +44,18 @@ func (h *SettingsHandler) SettingsPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SettingsHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
-	shopName := strings.TrimSpace(r.FormValue("shop_name"))
-	if shopName == "" {
-		http.Error(w, "shop name is required", http.StatusBadRequest)
-		return
-	}
+	shopName, ownerName, plan := normalizeShopProfile(
+		r.FormValue("shop_name"),
+		r.FormValue("owner_name"),
+		r.FormValue("plan"),
+	)
 
 	shopID := middleware.ShopIDFromContext(r)
-	if _, err := h.DB.Exec("UPDATE shops SET name = ? WHERE id = ?", shopName, shopID); err != nil {
-		http.Error(w, "failed to update shop name", http.StatusInternalServerError)
+	if _, err := h.DB.Exec(
+		"UPDATE shops SET name = ?, owner_name = ?, plan = ? WHERE id = ?",
+		shopName, ownerName, plan, shopID,
+	); err != nil {
+		http.Error(w, "failed to update shop settings", http.StatusInternalServerError)
 		return
 	}
 
@@ -49,5 +70,8 @@ func (h *SettingsHandler) shopFromRequest(r *http.Request) (models.Shop, error) 
 		WHERE id = ?`, middleware.ShopIDFromContext(r)).Scan(
 		&shop.ID, &shop.Name, &shop.OwnerName, &shop.OwnerPhone, &shop.Plan,
 	)
+	if err == nil {
+		shop.Name, shop.OwnerName, shop.Plan = normalizeShopProfile(shop.Name, shop.OwnerName, shop.Plan)
+	}
 	return shop, err
 }
