@@ -1,6 +1,10 @@
 package config
 
-import "os"
+import (
+	"bufio"
+	"os"
+	"strings"
+)
 
 type Config struct {
 	DBUser     string
@@ -24,7 +28,39 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
+// loadDotEnv reads KEY=VALUE lines from a .env file (if present) into the process
+// environment, without overriding vars already exported in the shell.
+func loadDotEnv(path string) {
+	f, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		value = strings.Trim(strings.TrimSpace(value), `"'`)
+		if key == "" {
+			continue
+		}
+		if _, exists := os.LookupEnv(key); !exists {
+			os.Setenv(key, value)
+		}
+	}
+}
+
 func Load() *Config {
+	loadDotEnv(".env")
+
 	return &Config{
 		DBUser:     getEnv("DB_USER", "root"),
 		DBPassword: getEnv("DB_PASSWORD", ""),
