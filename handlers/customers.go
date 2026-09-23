@@ -57,7 +57,7 @@ func (h *CustomerHandler) CustomerDetail(w http.ResponseWriter, r *http.Request)
 	}
 
 	rows, err := h.DB.Query(`
-		SELECT id, entry_type, amount, note, entry_date
+		SELECT id, entry_type, amount, note, entry_date, edited_at
 		FROM ledger_entries WHERE customer_id = ? ORDER BY entry_date ASC, id ASC`, c.ID)
 	if err != nil {
 		http.Error(w, "failed to load ledger", http.StatusInternalServerError)
@@ -69,7 +69,7 @@ func (h *CustomerHandler) CustomerDetail(w http.ResponseWriter, r *http.Request)
 	balance := c.OpeningBalance
 	for rows.Next() {
 		var e models.LedgerEntry
-		if err := rows.Scan(&e.ID, &e.EntryType, &e.Amount, &e.Note, &e.EntryDate); err != nil {
+		if err := rows.Scan(&e.ID, &e.EntryType, &e.Amount, &e.Note, &e.EntryDate, &e.EditedAt); err != nil {
 			continue
 		}
 		if e.EntryType == "credit" {

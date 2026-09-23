@@ -30,6 +30,7 @@ type LedgerEntry struct {
 	Note             string
 	EntryDate        time.Time
 	CreatedAt        time.Time
+	EditedAt         *time.Time
 	BalanceAfter     float64 // computed while loading the customer ledger
 	WhatsAppEntryURL string  // computed for credit entries with a customer phone number
 }

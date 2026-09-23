@@ -23,7 +23,7 @@ func main() {
 	tmpl := template.Must(template.ParseGlob("templates/*.html"))
 	authH := &handlers.AuthHandler{DB: conn, Tmpl: tmpl}
 	custH := &handlers.CustomerHandler{DB: conn, Tmpl: tmpl}
-	ledgerH := &handlers.LedgerHandler{DB: conn}
+	ledgerH := &handlers.LedgerHandler{DB: conn, Tmpl: tmpl}
 	dashH := &handlers.DashboardHandler{DB: conn, Tmpl: tmpl}
 	settingsH := &handlers.SettingsHandler{DB: conn, Tmpl: tmpl}
 
@@ -45,6 +45,8 @@ func main() {
 	protected.HandleFunc("POST /customers", custH.CreateCustomer)
 	protected.HandleFunc("GET /customers/{id}", custH.CustomerDetail)
 	protected.HandleFunc("POST /customers/{id}/entries", ledgerH.AddEntry)
+	protected.HandleFunc("GET /customers/{id}/entries/{entryID}/edit", ledgerH.EditEntryPage)
+	protected.HandleFunc("POST /customers/{id}/entries/{entryID}/edit", ledgerH.UpdateEntry)
 
 	mux.Handle("/dashboard", middleware.RequireAuth(conn)(protected))
 	mux.Handle("/settings", middleware.RequireAuth(conn)(protected))
