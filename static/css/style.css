@@ -292,6 +292,7 @@ a:hover { color: var(--green); }
 .ledger-table tr[onclick] { transition: background-color 160ms ease, transform 160ms var(--ease); }
 .ledger-table tr[onclick]:hover { background: var(--green-soft); }
 .ledger-table tr[onclick]:active { background: #dcfce7; }
+.entry-message-link { white-space: nowrap; }
 
 .form-card {
     transition: transform 220ms var(--ease), box-shadow 220ms var(--ease), border-color 220ms ease;

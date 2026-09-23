@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"udhaar-manager/middleware"
 	"udhaar-manager/models"
@@ -76,6 +77,7 @@ func (h *CustomerHandler) CustomerDetail(w http.ResponseWriter, r *http.Request)
 		} else {
 			balance -= e.Amount
 		}
+		e.BalanceAfter = balance
 		entries = append(entries, e)
 	}
 	c.Outstanding = balance
@@ -83,6 +85,12 @@ func (h *CustomerHandler) CustomerDetail(w http.ResponseWriter, r *http.Request)
 	if err := h.DB.QueryRow("SELECT name FROM shops WHERE id = ?", shopID).Scan(&shopName); err != nil {
 		http.Error(w, "failed to load shop", http.StatusInternalServerError)
 		return
+	}
+	for index := range entries {
+		entry := &entries[index]
+		if entry.EntryType == "credit" {
+			entry.WhatsAppEntryURL = whatsAppEntryURL(c.Phone, shopName, c.Name, entry.EntryDate, entry.Amount, entry.Note, entry.BalanceAfter)
+		}
 	}
 
 	h.Tmpl.ExecuteTemplate(w, "customer.html", map[string]any{
@@ -93,15 +101,43 @@ func (h *CustomerHandler) CustomerDetail(w http.ResponseWriter, r *http.Request)
 }
 
 func whatsAppReminderURL(phone, shopName, customerName string, outstanding float64) string {
+	phoneDigits := whatsAppPhoneDigits(phone)
+	if phoneDigits == "" {
+		return ""
+	}
+	message := fmt.Sprintf("Hello %s, this is a reminder from %s. Your outstanding balance is Rs. %.2f.", customerName, shopName, outstanding)
+	return whatsAppURL(phoneDigits, message)
+}
+
+func whatsAppEntryURL(phone, shopName, customerName string, entryDate time.Time, amount float64, note string, balanceAfter float64) string {
+	phoneDigits := whatsAppPhoneDigits(phone)
+	if phoneDigits == "" {
+		return ""
+	}
+	itemText := strings.TrimSpace(note)
+	if itemText == "" {
+		itemText = "items"
+	}
+	message := fmt.Sprintf(
+		"Hello %s, on %s you took udhaar of Rs. %.2f for %s from %s. Your total amount due is Rs. %.2f.",
+		customerName, entryDate.Format("02 Jan 2006"), amount, itemText, shopName, balanceAfter,
+	)
+	return whatsAppURL(phoneDigits, message)
+}
+
+func whatsAppPhoneDigits(phone string) string {
 	var digits strings.Builder
 	for _, character := range phone {
 		if character >= '0' && character <= '9' {
 			digits.WriteRune(character)
 		}
 	}
-	if digits.Len() == 0 {
+	return digits.String()
+}
+
+func whatsAppURL(phoneDigits, message string) string {
+	if phoneDigits == "" {
 		return ""
 	}
-	message := fmt.Sprintf("Hello %s, this is a reminder from %s. Your outstanding balance is Rs. %.2f.", customerName, shopName, outstanding)
-	return "https://wa.me/" + digits.String() + "?text=" + url.QueryEscape(message)
+	return "https://wa.me/" + phoneDigits + "?text=" + url.QueryEscape(message)
 }
