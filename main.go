@@ -9,7 +9,6 @@ import (
 	appdb "udhaar-manager/db"
 	"udhaar-manager/handlers"
 	"udhaar-manager/middleware"
-	"udhaar-manager/notify"
 )
 
 func main() {
@@ -22,11 +21,9 @@ func main() {
 	defer conn.Close()
 
 	tmpl := template.Must(template.ParseGlob("templates/*.html"))
-	sender := notify.NewSender(cfg)
-
-	authH := &handlers.AuthHandler{DB: conn, Tmpl: tmpl, Notify: sender}
+	authH := &handlers.AuthHandler{DB: conn, Tmpl: tmpl}
 	custH := &handlers.CustomerHandler{DB: conn, Tmpl: tmpl}
-	ledgerH := &handlers.LedgerHandler{DB: conn, Notify: sender}
+	ledgerH := &handlers.LedgerHandler{DB: conn}
 	dashH := &handlers.DashboardHandler{DB: conn, Tmpl: tmpl}
 	settingsH := &handlers.SettingsHandler{DB: conn, Tmpl: tmpl}
 
@@ -34,9 +31,9 @@ func main() {
 
 	// Public routes
 	mux.HandleFunc("GET /login", authH.LoginPage)
-	mux.HandleFunc("POST /login/otp", authH.RequestOTP)
-	mux.HandleFunc("GET /login/verify", authH.VerifyPage)
-	mux.HandleFunc("POST /login/verify", authH.VerifyOTP)
+	mux.HandleFunc("POST /login", authH.Login)
+	mux.HandleFunc("GET /register", authH.RegisterPage)
+	mux.HandleFunc("POST /register", authH.Register)
 	mux.HandleFunc("POST /logout", authH.Logout)
 
 	// Protected routes

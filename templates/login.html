@@ -23,12 +23,17 @@
             <span>SMART CREDIT LEDGER</span>
         </div>
         <p class="brand-quote">Keep every credit clear, every relationship strong.</p>
-        <p>Enter your mobile number to get started.</p>
-        <form action="/login/otp" method="POST">
+        <p>Sign in to manage your customers and ledger.</p>
+        <form action="/login" method="POST">
             <label for="phone">Phone number</label>
             <input type="tel" id="phone" name="phone" placeholder="+919812345678" required>
-            <button type="submit">Send OTP</button>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" autocomplete="current-password" required>
+
+            <button type="submit">Login</button>
         </form>
+        <p>New to Udhaar Manager? <a href="/register">Create your account</a></p>
     </div>
 </body>
 </html>

@@ -2,8 +2,11 @@ package handlers
 
 import (
 	"database/sql"
+	"fmt"
 	"html/template"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"udhaar-manager/middleware"
 	"udhaar-manager/models"
@@ -20,20 +23,16 @@ func (h *CustomerHandler) NewCustomerPage(w http.ResponseWriter, r *http.Request
 
 func (h *CustomerHandler) CreateCustomer(w http.ResponseWriter, r *http.Request) {
 	shopID := middleware.ShopIDFromContext(r)
-	name := r.FormValue("name")
-	phone := r.FormValue("phone")
-	channel := r.FormValue("notify_channel")
-	if channel == "" {
-		channel = "sms"
-	}
+	name := strings.TrimSpace(r.FormValue("name"))
+	phone := strings.TrimSpace(r.FormValue("phone"))
 	if name == "" {
 		http.Error(w, "name is required", http.StatusBadRequest)
 		return
 	}
 
 	_, err := h.DB.Exec(
-		"INSERT INTO customers (shop_id, name, phone, notify_channel) VALUES (?, ?, ?, ?)",
-		shopID, name, phone, channel,
+		"INSERT INTO customers (shop_id, name, phone, notify_channel) VALUES (?, ?, ?, 'none')",
+		shopID, name, phone,
 	)
 	if err != nil {
 		http.Error(w, "failed to add customer", http.StatusInternalServerError)
@@ -80,9 +79,29 @@ func (h *CustomerHandler) CustomerDetail(w http.ResponseWriter, r *http.Request)
 		entries = append(entries, e)
 	}
 	c.Outstanding = balance
+	var shopName string
+	if err := h.DB.QueryRow("SELECT name FROM shops WHERE id = ?", shopID).Scan(&shopName); err != nil {
+		http.Error(w, "failed to load shop", http.StatusInternalServerError)
+		return
+	}
 
 	h.Tmpl.ExecuteTemplate(w, "customer.html", map[string]any{
-		"Customer": c,
-		"Entries":  entries,
+		"Customer":            c,
+		"Entries":             entries,
+		"WhatsAppReminderURL": whatsAppReminderURL(c.Phone, shopName, c.Name, c.Outstanding),
 	})
+}
+
+func whatsAppReminderURL(phone, shopName, customerName string, outstanding float64) string {
+	var digits strings.Builder
+	for _, character := range phone {
+		if character >= '0' && character <= '9' {
+			digits.WriteRune(character)
+		}
+	}
+	if digits.Len() == 0 {
+		return ""
+	}
+	message := fmt.Sprintf("Hello %s, this is a reminder from %s. Your outstanding balance is Rs. %.2f.", customerName, shopName, outstanding)
+	return "https://wa.me/" + digits.String() + "?text=" + url.QueryEscape(message)
 }

@@ -4,80 +4,85 @@ import (
 	"database/sql"
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
-	"udhaar-manager/notify"
 	"udhaar-manager/utils"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthHandler struct {
-	DB     *sql.DB
-	Tmpl   *template.Template
-	Notify *notify.Sender
+	DB   *sql.DB
+	Tmpl *template.Template
 }
 
 func (h *AuthHandler) LoginPage(w http.ResponseWriter, r *http.Request) {
 	h.Tmpl.ExecuteTemplate(w, "login.html", nil)
 }
 
-// RequestOTP creates the shop row if it doesn't exist yet, generates an OTP, and "sends" it via notify.
-func (h *AuthHandler) RequestOTP(w http.ResponseWriter, r *http.Request) {
-	phone := r.FormValue("phone")
-	if phone == "" {
-		http.Error(w, "phone is required", http.StatusBadRequest)
+func (h *AuthHandler) RegisterPage(w http.ResponseWriter, r *http.Request) {
+	h.Tmpl.ExecuteTemplate(w, "register.html", nil)
+}
+
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	shopName := strings.TrimSpace(r.FormValue("shop_name"))
+	ownerName := strings.TrimSpace(r.FormValue("owner_name"))
+	phone := strings.TrimSpace(r.FormValue("phone"))
+	email := strings.ToLower(strings.TrimSpace(r.FormValue("email")))
+	password := r.FormValue("password")
+	if shopName == "" || ownerName == "" || phone == "" || email == "" || !validPassword(password) {
+		http.Error(w, "shop name, owner name, phone, email, and a password of at least 8 characters are required", http.StatusBadRequest)
 		return
 	}
 
-	otp := utils.GenerateOTP()
-	otpHash := utils.HashOTP(otp)
-	expiresAt := time.Now().Add(5 * time.Minute)
-
-	_, err := h.DB.Exec(`
-		INSERT INTO shops (owner_phone, otp_hash, otp_expires_at)
-		VALUES (?, ?, ?)
-		ON DUPLICATE KEY UPDATE otp_hash = VALUES(otp_hash), otp_expires_at = VALUES(otp_expires_at)`,
-		phone, otpHash, expiresAt,
-	)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, "failed to create otp", http.StatusInternalServerError)
+		http.Error(w, "failed to secure password", http.StatusInternalServerError)
 		return
 	}
 
-	if err := h.Notify.SendOTP(phone, otp); err != nil {
-		http.Error(w, "failed to send otp", http.StatusBadGateway)
+	result, err := h.DB.Exec(`
+		INSERT INTO shops (name, owner_name, owner_phone, owner_email, password_hash)
+		VALUES (?, ?, ?, ?, ?)`, shopName, ownerName, phone, email, string(passwordHash))
+	if err != nil {
+		http.Error(w, "an account already exists with this phone number or email", http.StatusConflict)
 		return
 	}
 
-	http.Redirect(w, r, "/login/verify?phone="+phone, http.StatusSeeOther)
+	shopID, err := result.LastInsertId()
+	if err != nil {
+		http.Error(w, "failed to create account", http.StatusInternalServerError)
+		return
+	}
+	h.createSession(w, r, uint64(shopID))
 }
 
-func (h *AuthHandler) VerifyPage(w http.ResponseWriter, r *http.Request) {
-	phone := r.URL.Query().Get("phone")
-	h.Tmpl.ExecuteTemplate(w, "verify.html", map[string]string{"Phone": phone})
-}
-
-// VerifyOTP checks the submitted code and, on success, creates a session cookie.
-func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
-	phone := r.FormValue("phone")
-	otp := r.FormValue("otp")
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	phone := strings.TrimSpace(r.FormValue("phone"))
+	password := r.FormValue("password")
+	if phone == "" || password == "" {
+		http.Error(w, "phone number and password are required", http.StatusBadRequest)
+		return
+	}
 
 	var shopID uint64
-	var shopName string
-	var otpHash string
-	var expiresAt time.Time
+	var passwordHash string
 	err := h.DB.QueryRow(
-		"SELECT id, COALESCE(name, ''), otp_hash, otp_expires_at FROM shops WHERE owner_phone = ?", phone,
-	).Scan(&shopID, &shopName, &otpHash, &expiresAt)
-	if err != nil {
-		http.Error(w, "shop not found", http.StatusBadRequest)
+		"SELECT id, COALESCE(password_hash, '') FROM shops WHERE owner_phone = ? AND is_active = TRUE", phone,
+	).Scan(&shopID, &passwordHash)
+	if err != nil || bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(password)) != nil {
+		http.Error(w, "invalid phone number or password", http.StatusUnauthorized)
 		return
 	}
+	h.createSession(w, r, shopID)
+}
 
-	if time.Now().After(expiresAt) || utils.HashOTP(otp) != otpHash {
-		http.Error(w, "invalid or expired OTP", http.StatusUnauthorized)
-		return
-	}
+func validPassword(password string) bool {
+	return len(password) >= 8
+}
 
+func (h *AuthHandler) createSession(w http.ResponseWriter, r *http.Request, shopID uint64) {
 	token, err := utils.GenerateSessionToken()
 	if err != nil {
 		http.Error(w, "failed to create session", http.StatusInternalServerError)
@@ -101,10 +106,6 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
-	if shopName == "" || shopName == "My Shop" {
-		http.Redirect(w, r, "/settings", http.StatusSeeOther)
-		return
-	}
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 

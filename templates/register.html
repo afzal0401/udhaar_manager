@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - Udhaar Manager</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="auth-card">
+        <div class="mini-brand" aria-hidden="true"><span>UM</span></div>
+        <h1>Create your account</h1>
+        <p>Set up your shop and sign in with a password.</p>
+        <form action="/register" method="POST">
+            <label for="shop_name">Shop name</label>
+            <input type="text" id="shop_name" name="shop_name" maxlength="150" required>
+
+            <label for="owner_name">Owner name</label>
+            <input type="text" id="owner_name" name="owner_name" maxlength="100" required>
+
+            <label for="phone">Phone number</label>
+            <input type="tel" id="phone" name="phone" placeholder="+919812345678" required>
+
+            <label for="email">Recovery email</label>
+            <input type="email" id="email" name="email" autocomplete="email" required>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" minlength="8" autocomplete="new-password" required>
+
+            <button type="submit">Create account</button>
+        </form>
+        <p>Already have an account? <a href="/login">Login</a></p>
+    </div>
+</body>
+</html>

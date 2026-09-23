@@ -18,6 +18,9 @@
             <span>Outstanding</span>
             <strong>₹{{printf "%.2f" .Customer.Outstanding}}</strong>
         </div>
+        {{if .WhatsAppReminderURL}}
+        <a class="btn" href="{{.WhatsAppReminderURL}}" target="_blank" rel="noopener">Send WhatsApp reminder</a>
+        {{end}}
 
         <table class="ledger-table">
             <thead>
