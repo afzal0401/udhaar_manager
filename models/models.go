@@ -7,6 +7,7 @@ type Shop struct {
 	Name       string
 	OwnerName  string
 	OwnerPhone string
+	OwnerEmail string
 	Plan       string
 }
 

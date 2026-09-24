@@ -1,6 +1,9 @@
 package handlers
 
-import "testing"
+import (
+	"net/mail"
+	"testing"
+)
 
 func TestNormalizeShopProfile(t *testing.T) {
 	shopName, ownerName, plan := normalizeShopProfile("  My Shop  ", "  Rahul Verma  ", " Pro ")
@@ -25,5 +28,14 @@ func TestNormalizeShopProfileDefaults(t *testing.T) {
 	}
 	if plan != "trial" {
 		t.Fatalf("expected default plan, got %q", plan)
+	}
+}
+
+func TestRecoveryEmailValidation(t *testing.T) {
+	if _, err := mail.ParseAddress("owner@example.com"); err != nil {
+		t.Fatalf("expected valid email, got %v", err)
+	}
+	if _, err := mail.ParseAddress("not-an-email"); err == nil {
+		t.Fatal("expected invalid email to be rejected")
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"html/template"
 	"net/http"
+	"net/mail"
 	"strings"
 
 	"udhaar-manager/middleware"
@@ -49,11 +50,16 @@ func (h *SettingsHandler) UpdateSettings(w http.ResponseWriter, r *http.Request)
 		r.FormValue("owner_name"),
 		r.FormValue("plan"),
 	)
+	ownerEmail := strings.ToLower(strings.TrimSpace(r.FormValue("owner_email")))
+	if _, err := mail.ParseAddress(ownerEmail); err != nil {
+		http.Error(w, "a valid recovery email is required", http.StatusBadRequest)
+		return
+	}
 
 	shopID := middleware.ShopIDFromContext(r)
 	if _, err := h.DB.Exec(
-		"UPDATE shops SET name = ?, owner_name = ?, plan = ? WHERE id = ?",
-		shopName, ownerName, plan, shopID,
+		"UPDATE shops SET name = ?, owner_name = ?, owner_email = ?, plan = ? WHERE id = ?",
+		shopName, ownerName, ownerEmail, plan, shopID,
 	); err != nil {
 		http.Error(w, "failed to update shop settings", http.StatusInternalServerError)
 		return
@@ -65,10 +71,10 @@ func (h *SettingsHandler) UpdateSettings(w http.ResponseWriter, r *http.Request)
 func (h *SettingsHandler) shopFromRequest(r *http.Request) (models.Shop, error) {
 	var shop models.Shop
 	err := h.DB.QueryRow(`
-		SELECT id, COALESCE(name, ''), COALESCE(owner_name, ''), owner_phone, plan
+		SELECT id, COALESCE(name, ''), COALESCE(owner_name, ''), owner_phone, COALESCE(owner_email, ''), plan
 		FROM shops
 		WHERE id = ?`, middleware.ShopIDFromContext(r)).Scan(
-		&shop.ID, &shop.Name, &shop.OwnerName, &shop.OwnerPhone, &shop.Plan,
+		&shop.ID, &shop.Name, &shop.OwnerName, &shop.OwnerPhone, &shop.OwnerEmail, &shop.Plan,
 	)
 	if err == nil {
 		shop.Name, shop.OwnerName, shop.Plan = normalizeShopProfile(shop.Name, shop.OwnerName, shop.Plan)
