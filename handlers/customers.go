@@ -57,7 +57,7 @@ func (h *CustomerHandler) CustomerDetail(w http.ResponseWriter, r *http.Request)
 	}
 
 	rows, err := h.DB.Query(`
-		SELECT id, entry_type, amount, note, entry_date, edited_at
+		SELECT id, entry_type, amount, note, entry_date, edited_at, previous_amount
 		FROM ledger_entries WHERE customer_id = ? ORDER BY entry_date ASC, id ASC`, c.ID)
 	if err != nil {
 		http.Error(w, "failed to load ledger", http.StatusInternalServerError)
@@ -69,7 +69,7 @@ func (h *CustomerHandler) CustomerDetail(w http.ResponseWriter, r *http.Request)
 	balance := c.OpeningBalance
 	for rows.Next() {
 		var e models.LedgerEntry
-		if err := rows.Scan(&e.ID, &e.EntryType, &e.Amount, &e.Note, &e.EntryDate, &e.EditedAt); err != nil {
+		if err := rows.Scan(&e.ID, &e.EntryType, &e.Amount, &e.Note, &e.EntryDate, &e.EditedAt, &e.PreviousAmount); err != nil {
 			continue
 		}
 		if e.EntryType == "credit" {
@@ -90,6 +90,9 @@ func (h *CustomerHandler) CustomerDetail(w http.ResponseWriter, r *http.Request)
 		entry := &entries[index]
 		if entry.EntryType == "credit" {
 			entry.WhatsAppEntryURL = whatsAppEntryURL(c.Phone, shopName, c.Name, entry.EntryDate, entry.Amount, entry.Note, entry.BalanceAfter)
+		}
+		if entry.EditedAt != nil && entry.PreviousAmount != nil {
+			entry.WhatsAppEditURL = whatsAppEditURL(c.Phone, shopName, c.Name, entry.EntryDate, *entry.PreviousAmount, entry.Amount, entry.BalanceAfter)
 		}
 	}
 
@@ -121,6 +124,18 @@ func whatsAppEntryURL(phone, shopName, customerName string, entryDate time.Time,
 	message := fmt.Sprintf(
 		"Hello %s, on %s you took udhaar of Rs. %.2f for %s from %s. Your total amount due is Rs. %.2f.",
 		customerName, entryDate.Format("02 Jan 2006"), amount, itemText, shopName, balanceAfter,
+	)
+	return whatsAppURL(phoneDigits, message)
+}
+
+func whatsAppEditURL(phone, shopName, customerName string, entryDate time.Time, previousAmount, newAmount, balanceAfter float64) string {
+	phoneDigits := whatsAppPhoneDigits(phone)
+	if phoneDigits == "" {
+		return ""
+	}
+	message := fmt.Sprintf(
+		"Hello %s, %s corrected your entry dated %s. The amount has been updated from Rs. %.2f to Rs. %.2f. Your total amount due is now Rs. %.2f.",
+		customerName, shopName, entryDate.Format("02 Jan 2006"), previousAmount, newAmount, balanceAfter,
 	)
 	return whatsAppURL(phoneDigits, message)
 }

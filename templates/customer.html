@@ -33,7 +33,11 @@
                     <td>{{.EntryType}}</td>
                     <td>₹{{printf "%.2f" .Amount}}</td>
                     <td>{{.Note}}</td>
-                    <td>{{if .WhatsAppEntryURL}}<a class="whatsapp-entry-button" href="{{.WhatsAppEntryURL}}" target="_blank" rel="noopener" aria-label="Send this entry on WhatsApp" title="Send this entry on WhatsApp"><img src="https://cdn.simpleicons.org/whatsapp/ffffff" alt="" width="18" height="18"></a>{{else}}-{{end}}</td>
+                    <td>
+                        {{if .WhatsAppEntryURL}}<a class="whatsapp-entry-button" href="{{.WhatsAppEntryURL}}" target="_blank" rel="noopener" aria-label="Send this entry on WhatsApp" title="Send this entry on WhatsApp"><img src="https://cdn.simpleicons.org/whatsapp/ffffff" alt="" width="18" height="18"></a>{{end}}
+                        {{if .WhatsAppEditURL}}<a class="whatsapp-edit-button" href="{{.WhatsAppEditURL}}" target="_blank" rel="noopener" aria-label="Notify customer of this correction" title="Notify customer of this correction"><img src="https://cdn.simpleicons.org/whatsapp/ffffff" alt="" width="18" height="18"><span class="whatsapp-edit-badge" aria-hidden="true">&#9998;</span></a>{{end}}
+                        {{if not (or .WhatsAppEntryURL .WhatsAppEditURL)}}-{{end}}
+                    </td>
                     <td><a class="edit-entry-button" href="/customers/{{$.Customer.ID}}/entries/{{.ID}}/edit" aria-label="Edit this ledger entry" title="Edit this ledger entry"><span aria-hidden="true">&#9998;</span></a></td>
                 </tr>
                 {{else}}

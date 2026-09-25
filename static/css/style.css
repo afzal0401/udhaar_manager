@@ -618,6 +618,38 @@ a:hover {
 .whatsapp-entry-button img {
   display: block;
 }
+.whatsapp-edit-button {
+  position: relative;
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  background: #25d366;
+  box-shadow: 0 3px 8px rgba(37, 211, 102, 0.25);
+}
+.whatsapp-edit-button:hover {
+  background: #1da851;
+  transform: translateY(-1px);
+}
+.whatsapp-edit-button img {
+  display: block;
+}
+.whatsapp-edit-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 15px;
+  height: 15px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: #d97706;
+  font-size: 0.6rem;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
 .edit-entry-button {
   display: inline-grid;
   width: 34px;

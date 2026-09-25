@@ -50,6 +50,7 @@ CREATE TABLE ledger_entries (
     notify_status ENUM('pending','sent','failed','skipped') NOT NULL DEFAULT 'pending',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     edited_at DATETIME NULL,
+    previous_amount DECIMAL(10,2) NULL,
     FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE,
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
     INDEX idx_ledger_customer (customer_id, entry_date),

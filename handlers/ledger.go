@@ -78,11 +78,21 @@ func (h *LedgerHandler) UpdateEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var currentAmount float64
+	if err := h.DB.QueryRow(`
+		SELECT amount FROM ledger_entries
+		WHERE id = ? AND customer_id = ? AND shop_id = ?`,
+		entryID, customerID, shopID,
+	).Scan(&currentAmount); err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
 	result, err := h.DB.Exec(`
 		UPDATE ledger_entries
-		SET entry_type = ?, amount = ?, note = ?, entry_date = ?, edited_at = NOW()
+		SET entry_type = ?, amount = ?, note = ?, entry_date = ?, edited_at = NOW(), previous_amount = ?
 		WHERE id = ? AND customer_id = ? AND shop_id = ?`,
-		entryType, parsedAmount, note, entryDate, entryID, customerID, shopID,
+		entryType, parsedAmount, note, entryDate, currentAmount, entryID, customerID, shopID,
 	)
 	if err != nil {
 		http.Error(w, "failed to update ledger entry", http.StatusInternalServerError)
