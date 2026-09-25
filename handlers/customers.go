@@ -30,6 +30,10 @@ func (h *CustomerHandler) CreateCustomer(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "name is required", http.StatusBadRequest)
 		return
 	}
+	if phone != "" && whatsAppPhoneDigits(phone) == "" {
+		http.Error(w, "phone must be a valid 10-digit mobile number", http.StatusBadRequest)
+		return
+	}
 
 	_, err := h.DB.Exec(
 		"INSERT INTO customers (shop_id, name, phone, notify_channel) VALUES (?, ?, ?, 'none')",
@@ -112,6 +116,19 @@ func whatsAppReminderURL(phone, shopName, customerName string, outstanding float
 	return whatsAppURL(phoneDigits, message)
 }
 
+// isValidIndianMobileDigits reports whether digits is a usable WhatsApp number:
+// either a bare 10-digit mobile number (6-9 leading digit) or one already prefixed with the 91 country code.
+func isValidIndianMobileDigits(digits string) bool {
+	switch len(digits) {
+	case 10:
+		return digits[0] >= '6' && digits[0] <= '9'
+	case 12:
+		return strings.HasPrefix(digits, "91") && digits[2] >= '6' && digits[2] <= '9'
+	default:
+		return false
+	}
+}
+
 func whatsAppEntryURL(phone, shopName, customerName string, entryDate time.Time, amount float64, note string, balanceAfter float64) string {
 	phoneDigits := whatsAppPhoneDigits(phone)
 	if phoneDigits == "" {
@@ -140,6 +157,8 @@ func whatsAppEditURL(phone, shopName, customerName string, entryDate time.Time, 
 	return whatsAppURL(phoneDigits, message)
 }
 
+// whatsAppPhoneDigits strips a phone number down to its digits and normalizes it to
+// the 12-digit "91XXXXXXXXXX" form wa.me requires, returning "" if it isn't a valid Indian mobile number.
 func whatsAppPhoneDigits(phone string) string {
 	var digits strings.Builder
 	for _, character := range phone {
@@ -147,7 +166,14 @@ func whatsAppPhoneDigits(phone string) string {
 			digits.WriteRune(character)
 		}
 	}
-	return digits.String()
+	raw := digits.String()
+	if !isValidIndianMobileDigits(raw) {
+		return ""
+	}
+	if len(raw) == 10 {
+		return "91" + raw
+	}
+	return raw
 }
 
 func whatsAppURL(phoneDigits, message string) string {
